@@ -1,10 +1,3 @@
-# FMXWndProcHook
-FMXä¸‹TFormçš„WndProc HOOK
-
-### ç”¨æ³•
-
-```pascal
-
 unit Unit23;
 
 interface
@@ -35,14 +28,13 @@ implementation
 
 procedure TForm23.WMLButtonDown(var msg: TWMLButtonDown);
 begin
-  Log.d('é¼ æ ‡æŒ‰ä¸‹: x=%d, y=%d', [Msg.XPos, msg.YPos]);
+  Log.d('Êó±ê°´ÏÂ: x=%d, y=%d', [Msg.XPos, msg.YPos]);
 end;
 
 procedure TForm23.WMMove(var msg: TWMMove);
 begin
   msg.Result := 1;
-  Log.d('æ”¶åˆ°ç§»åŠ¨çš„æ¶ˆæ¯');
+  Log.d('ÊÕµ½ÒÆ¶¯µÄÏûÏ¢');
 end;
 
 end.
-```
