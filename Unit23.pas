@@ -9,6 +9,8 @@ uses
 
 type
   TForm23 = class(TWndProcForm)
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Single);
   private
     { Private declarations }
   protected
@@ -26,9 +28,16 @@ implementation
 
 {$R *.fmx}
 
+procedure TForm23.FormMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  Log.d('mousedown: x=%f, y=%f', [x, y]);
+end;
+
 procedure TForm23.WMLButtonDown(var msg: TWMLButtonDown);
 begin
   Log.d('鼠标按下: x=%d, y=%d', [Msg.XPos, msg.YPos]);
+  //Msg.Result := 1;  // 拦截消息，这样 FormMouseDown 就收不到这个消息了
 end;
 
 procedure TForm23.WMMove(var msg: TWMMove);

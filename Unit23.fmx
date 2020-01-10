@@ -7,5 +7,6 @@ object Form23: TForm23
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
+  OnMouseDown = FormMouseDown
   DesignerMasterStyle = 0
 end
