@@ -95,7 +95,8 @@ end;
 
 procedure TWndProcForm.DoShow;
 begin
-  FWndProcHook.HookWndProc;
+  if not(csDesigning in ComponentState) then
+    FWndProcHook.HookWndProc;
   inherited;
 end;
 
@@ -133,6 +134,9 @@ end;
 
 procedure TWndProcHook.HookWndProc;
 begin
+  // 设计状态，不HOOK
+  if csDesigning in ComponentState then
+    Exit;
   // 已HOOK
   if FObjectInstance <> nil then
     Exit;
