@@ -1,4 +1,4 @@
-program Project20;
+program Sample;
 
 uses
   System.StartUpCopy,
