@@ -24,6 +24,26 @@ uses
 
 type
 
+  // 这个类主要是给不想继承窗口使用的
+
+  TWndProcHook = class(TComponent)
+  private
+    FForm: TCustomForm;
+    FWndHandle: HWND;
+    FObjectInstance: Pointer;
+    FDefWindowProc: Pointer;
+    FWndProc: TWndMethod;
+    procedure MainWndProc(var Message: TMessage);
+  public
+    procedure HookWndProc;
+    procedure UnHookWndProc;
+    function Perform(Msg: Cardinal; WParam: WPARAM; LParam: LPARAM): LRESULT;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    property WndProc: TWndMethod read FWndProc write FWndProc;
+  end;
+
   {
     用法：
       继承自此类
@@ -40,21 +60,17 @@ type
 
   TWndProcForm = class(TForm)
   private
-    FWndHandle: HWND;
-    FObjectInstance: Pointer;
-    FDefWindowProc: Pointer;
-  private
-    procedure MainWndProc(var Message: TMessage);
-    procedure HookWndProc;
-    procedure UnHookWndProc;
+    FWndProcHook: TWndProcHook;
   protected
     /// <summary>
-    ///   WndProc
+    ///   WndProc 重载
     /// </summary>
     procedure WndProc(var Message: TMessage); virtual;
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure DoShow; override;
+    function Perform(Msg: Cardinal; WParam: WPARAM; LParam: LPARAM): LRESULT;
   end;
 
 implementation
@@ -64,29 +80,66 @@ uses
 
 { TWndProcForm }
 
- 
+constructor TWndProcForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FWndProcHook := TWndProcHook.Create(Self);
+  FWndProcHook.WndProc := WndProc;
+end;
 
 destructor TWndProcForm.Destroy;
 begin
-  UnHookWndProc;
+  FWndProcHook.Free;
   inherited;
 end;
 
 procedure TWndProcForm.DoShow;
 begin
-  HookWndProc;
+  FWndProcHook.HookWndProc;
   inherited;
 end;
 
-procedure TWndProcForm.HookWndProc;
+function TWndProcForm.Perform(Msg: Cardinal; WParam: WPARAM;
+  LParam: LPARAM): LRESULT;
+begin
+  Result := FWndProcHook.Perform(Msg, WParam, LParam);
+end;
+
+procedure TWndProcForm.WndProc(var Message: TMessage);
+begin
+  // virtual method
+end;
+
+{ TWndProcHook }
+
+constructor TWndProcHook.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  if AOwner = nil then
+    raise Exception.Create('AOwner不能为nil。');
+
+  if not (AOwner is TCustomForm) then
+    raise Exception.Create('AOwner必须为继承自TCustomForm的。');
+
+  FForm := AOwner as TCustomForm;
+end;
+
+destructor TWndProcHook.Destroy;
+begin
+  UnHookWndProc;
+  FForm := nil;
+  inherited;
+end;
+
+procedure TWndProcHook.HookWndProc;
 begin
   // 已HOOK
   if FObjectInstance <> nil then
     Exit;
-    
+
   if FWndHandle = 0  then
-    FWndHandle := FmxHandleToHWND(Self.Handle);
-    
+    FWndHandle := FmxHandleToHWND(FForm.Handle);
+
   if FWndHandle > 0 then
   begin
     if FObjectInstance = nil then
@@ -101,18 +154,47 @@ begin
   end;
 end;
 
-procedure TWndProcForm.MainWndProc(var Message: TMessage);
+procedure TWndProcHook.MainWndProc(var Message: TMessage);
 begin
   try
-    WndProc(Message);
+    if Assigned(FWndProc) then
+    begin
+      // 消息传递过程。
+      FWndProc(Message);
+      // 消息派遣，如果WndProc返回0没处理的就派遣消息，反之不再向下派遣消息
+      // procedure WMMove(var Msg: TWMMove); message WM_MOVE;
+      if Message.Result = 0 then
+        FForm.Dispatch(Message);
+    end;
   except
     Application.HandleException(Self);
   end;
-  if Message.Result = 0 then
-    Message.Result := CallWindowProc(FDefWindowProc, FWndHandle, Message.Msg, Message.WParam, Message.LParam);
+  with Message do
+  begin
+    if Result = 0 then
+      Result := CallWindowProc(FDefWindowProc, FWndHandle, Msg, WParam, LParam);
+  end;
 end;
 
-procedure TWndProcForm.UnHookWndProc;
+function TWndProcHook.Perform(Msg: Cardinal; WParam: WPARAM;
+  LParam: LPARAM): LRESULT;
+//var
+//  LMsg: TMessage;
+begin
+  Result := 0;
+  if FForm <> nil then
+    Result := LRESULT(PostMessage(FWndHandle, Msg, WParam, LParam));
+
+//  LMsg.Msg := Msg;
+//  LMsg.WParam := WParam;
+//  LMsg.LParam := LParam;
+//  LMsg.Result := 0;
+//  //if FForm <> nil then
+//    MainWndProc(LMsg);
+//  Result := LMsg.Result;
+end;
+
+procedure TWndProcHook.UnHookWndProc;
 begin
   if FDefWindowProc <> nil then
   begin
@@ -124,12 +206,6 @@ begin
     FreeObjectInstance(FObjectInstance);
     FObjectInstance := nil;
   end;
-end;
-
- 
-procedure TWndProcForm.WndProc(var Message: TMessage);
-begin
-  Dispatch(Message);
 end;
 
 end.
