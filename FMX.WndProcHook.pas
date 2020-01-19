@@ -63,7 +63,7 @@ type
     FWndProcHook: TWndProcHook;
   protected
     /// <summary>
-    ///   WndProc 重载
+    ///   窗口消息过程
     /// </summary>
     procedure WndProc(var Message: TMessage); virtual;
   public
