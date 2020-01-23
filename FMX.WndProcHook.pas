@@ -42,6 +42,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property WndProc: TWndMethod read FWndProc write FWndProc;
+    property WndHandle: HWND read FWndHandle;
   end;
 
   {
@@ -61,6 +62,7 @@ type
   TWndProcForm = class(TForm)
   private
     FWndProcHook: TWndProcHook;
+    function GetWndHandle: HWND;
   protected
     /// <summary>
     ///   窗口消息过程
@@ -71,6 +73,7 @@ type
     destructor Destroy; override;
     procedure DoShow; override;
     function Perform(Msg: Cardinal; WParam: WPARAM; LParam: LPARAM): LRESULT;
+    property WndHandle: HWND read GetWndHandle;
   end;
 
 implementation
@@ -100,6 +103,11 @@ begin
   inherited;
 end;
 
+function TWndProcForm.GetWndHandle: HWND;
+begin
+  Result := FWndProcHook.WndHandle;
+end;
+
 function TWndProcForm.Perform(Msg: Cardinal; WParam: WPARAM;
   LParam: LPARAM): LRESULT;
 begin
@@ -123,6 +131,7 @@ begin
     raise Exception.Create('AOwner必须为继承自TCustomForm的。');
 
   FForm := AOwner as TCustomForm;
+  FWndHandle := FmxHandleToHWND(FForm.Handle);
 end;
 
 destructor TWndProcHook.Destroy;
