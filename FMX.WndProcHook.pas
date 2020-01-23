@@ -131,7 +131,6 @@ begin
     raise Exception.Create('AOwner必须为继承自TCustomForm的。');
 
   FForm := AOwner as TCustomForm;
-  FWndHandle := FmxHandleToHWND(FForm.Handle);
 end;
 
 destructor TWndProcHook.Destroy;
