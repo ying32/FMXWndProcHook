@@ -170,14 +170,13 @@ procedure TWndProcHook.MainWndProc(var Message: TMessage);
 begin
   try
     if Assigned(FWndProc) then
-    begin
       // 消息传递过程。
       FWndProc(Message);
-      // 消息派遣，如果WndProc返回0没处理的就派遣消息，反之不再向下派遣消息
-      // procedure WMMove(var Msg: TWMMove); message WM_MOVE;
-      if Message.Result = 0 then
-        FForm.Dispatch(Message);
-    end;
+
+    // 消息派遣，如果WndProc返回0没处理的就派遣消息，反之不再向下派遣消息
+    // procedure WMMove(var Msg: TWMMove); message WM_MOVE;
+    if (Message.Result = 0) and Assigned(FForm) then
+      FForm.Dispatch(Message);
   except
     Application.HandleException(Self);
   end;
