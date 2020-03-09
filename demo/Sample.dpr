@@ -4,7 +4,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   Unit23 in 'Unit23.pas' {Form23},
-  FMX.WndProcHook in 'FMX.WndProcHook.pas';
+  FMX.WndProcHook in '..\FMX.WndProcHook.pas';
 
 {$R *.res}
 
